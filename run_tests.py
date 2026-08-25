@@ -2,7 +2,7 @@ import unittest
 import os
 import json
 from ingest import load_data, aggregate_daily
-from model import train_models, predict
+from model import train_models
 from logger import log_prediction
 from app import app
 
@@ -22,6 +22,7 @@ class TestAAVAILPipeline(unittest.TestCase):
         df = aggregate_daily(load_data())
         metrics = train_models(df, test_mode=True)
         self.assertTrue(os.path.exists(metrics["model_path"]))
+        self.assertIn("baseline_rmse", metrics)
 
     def test_03_logging_isolation(self):
         log_prediction([100]*7, 500.0, 0.01, country="EIRE", test_mode=True)
@@ -38,6 +39,7 @@ class TestAAVAILPipeline(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertEqual(data["status"], "success")
+        self.assertEqual(data["country"], "Germany")
         self.assertIn("prediction", data)
 
 if __name__ == "__main__":

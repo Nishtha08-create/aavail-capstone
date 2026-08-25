@@ -10,7 +10,6 @@ MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 def create_features(df, lag=7):
-    """Creates time-series lag features for supervised regression."""
     df = df.copy()
     for i in range(1, lag + 1):
         df[f"lag_{i}"] = df["revenue"].shift(i)
@@ -18,7 +17,7 @@ def create_features(df, lag=7):
     return df
 
 def train_models(df, test_mode=False):
-    """Trains baseline (Linear) and final (RandomForest) models, comparing performance."""
+    """Trains baseline (Linear) and final (Random Forest) models, comparing metrics."""
     featured_df = create_features(df)
     X = featured_df[[c for c in featured_df.columns if c.startswith("lag_")]]
     y = featured_df["revenue"]
@@ -27,7 +26,7 @@ def train_models(df, test_mode=False):
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
     
-    # Baseline Model
+    # Baseline
     baseline = LinearRegression()
     baseline.fit(X_train, y_train)
     b_pred = baseline.predict(X_test)
@@ -46,12 +45,10 @@ def train_models(df, test_mode=False):
     return {"baseline_rmse": b_rmse, "rf_rmse": rf_rmse, "model_path": model_path}
 
 def predict(data_input, test_mode=False):
-    """Runs single/multi-step inference using the trained model artifact."""
     prefix = "test_" if test_mode else ""
     model_path = os.path.join(MODEL_DIR, f"{prefix}rf_model.joblib")
     
     if not os.path.exists(model_path):
-        # Auto-train if missing
         from ingest import load_data, aggregate_daily
         df = aggregate_daily(load_data())
         train_models(df, test_mode=test_mode)

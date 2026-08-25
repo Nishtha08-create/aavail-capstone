@@ -17,7 +17,6 @@ def predict_endpoint():
     test_mode = payload.get("test_mode", False)
     input_data = payload["input"]
     
-    # Standardize input feature length to 7 lags
     if len(input_data) < 7:
         input_data = (input_data * 7)[:7]
     elif len(input_data) > 7:
@@ -26,7 +25,6 @@ def predict_endpoint():
     prediction = predict(input_data, test_mode=test_mode)
     runtime = time.time() - start_time
     
-    # Log prediction execution
     log_prediction(input_data, prediction, runtime, country=country, test_mode=test_mode)
     
     return jsonify({
